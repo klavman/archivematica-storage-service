@@ -4,7 +4,7 @@ FROM ubuntu:22.04 AS base
 
 ARG USER_ID=1000
 ARG GROUP_ID=1000
-ARG PYTHON_VERSION=3.6
+ARG PYTHON_VERSION=3.9
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV PYTHONUNBUFFERED 1
@@ -101,7 +101,7 @@ USER archivematica
 
 FROM base AS archivematica-storage-service
 
-ARG PYTHON_VERSION=3.6
+ARG PYTHON_VERSION=3.9
 
 WORKDIR /src/storage_service
 
