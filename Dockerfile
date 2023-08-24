@@ -1,10 +1,13 @@
 ARG TARGET=archivematica-storage-service
+ARG UBUNTU_VERSION=18.04
 
-FROM ubuntu:22.04 AS base
+FROM ubuntu:${UBUNTU_VERSION} AS base
 
+ARG UBUNTU_VERSION=18.04
 ARG USER_ID=1000
 ARG GROUP_ID=1000
 ARG PYTHON_VERSION=3.9
+
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV PYTHONUNBUFFERED 1
@@ -39,16 +42,7 @@ RUN set -ex \
 		unzip \
 		xz-utils tk-dev \
 		zlib1g-dev \
-		media-types \
 	&& rm -rf /var/lib/apt/lists/*
-
-# Install rclone
-RUN set -ex \
-	&& cd $(mktemp -d) \
- 	&& curl -OfsS "https://downloads.rclone.org/rclone-current-linux-amd64.zip" \
- 	&& unzip "rclone-*-linux-amd64.zip" \
- 	&& mv rclone-*-linux-amd64/rclone /usr/bin/ \
- 	&& chmod a+x /usr/bin/rclone
 
 # Set the locale
 RUN locale-gen en_US.UTF-8
@@ -88,6 +82,17 @@ RUN set -ex \
 	&& pyenv exec python${PYTHON_VERSION} -m pip install --upgrade pip setuptools \
 	&& pyenv exec python${PYTHON_VERSION} -m pip install --requirement /src/requirements/production.txt --requirement /src/requirements/test.txt \
 	&& pyenv rehash
+
+COPY osdeps.py /src/osdeps.py
+COPY osdeps /src/osdeps
+
+# Install OS dependencies.
+USER root
+RUN set -ex \
+	&& apt-get update \
+	&& /src/osdeps.py Ubuntu-${UBUNTU_VERSION} 1 | grep -v -E "python3.6-dev" | xargs apt-get install -y --no-install-recommends \
+	&& rm -rf /var/lib/apt/lists/*
+USER archivematica
 
 COPY ./ /src/
 

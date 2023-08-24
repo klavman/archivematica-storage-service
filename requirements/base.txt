@@ -10,9 +10,9 @@ asgiref==3.7.2
     # via django
 bagit==1.8.1
     # via -r base.in
-boto3==1.28.23
+boto3==1.28.34
     # via -r base.in
-botocore==1.31.23
+botocore==1.31.34
     # via
     #   boto3
     #   s3transfer
@@ -183,7 +183,7 @@ requests==2.31.0
     #   python-swiftclient
 rfc3986==2.0.0
     # via oslo-config
-s3transfer==0.6.1
+s3transfer==0.6.2
     # via boto3
 six==1.16.0
     # via
@@ -219,7 +219,7 @@ zope-interface==6.0
     # via gevent
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==68.0.0
+setuptools==68.1.2
     # via
     #   josepy
     #   zope-event

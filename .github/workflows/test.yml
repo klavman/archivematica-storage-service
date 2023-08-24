@@ -8,20 +8,12 @@ on:
       - "stable/**"
 jobs:
   test:
-    name: "Test ${{ matrix.name }}"
-    runs-on: "ubuntu-22.04"
+    name: "Test Python ${{ matrix.python-version }}"
+    runs-on: "ubuntu-20.04"
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - name: "py39"
-            python-version: "3.9"
-            toxenv: "py39"
-            coverage: true
-          - name: "migrations"
-            python-version: "3.9"
-            toxenv: "migrations"
-            coverage: false
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
     steps:
       - name: "Check out repository"
         uses: "actions/checkout@v3"
@@ -29,6 +21,9 @@ jobs:
         uses: "actions/setup-python@v4"
         with:
           python-version: "${{ matrix.python-version }}"
+          cache: "pip"
+          cache-dependency-path: |
+            **/requirements/test.txt
       - name: "Install OS packages"
         run: |
           sudo apt-get --quiet update
@@ -39,56 +34,52 @@ jobs:
         run: |
           sudo mkdir -p /var/archivematica/storage_service
           sudo chown -R $USER /var/archivematica/storage_service
-      - name: "Get pip cache dir"
-        id: "pip-cache"
-        run: |
-          echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
-      - name: "Cache pip packages"
-        uses: "actions/cache@v3"
-        with:
-          path: "${{ steps.pip-cache.outputs.dir }}"
-          key: "${{ runner.os }}-pip-${{ hashFiles('**/requirements/test.txt') }}"
-          restore-keys: |
-            ${{ runner.os }}-pip-
       - name: "Install tox"
         run: |
           python -m pip install --upgrade pip
-          pip install tox
+          pip install tox tox-gh-actions
       - name: "Run tox"
-        if: "! matrix.coverage"
         env:
-          TOXENV: ${{ matrix.toxenv }}
-          PYTEST_ADDOPTS: -vv
-        run: |
-          tox
-      - name: "Run tox with coverage"
-        if: "matrix.coverage"
-        env:
-          TOXENV: ${{ matrix.toxenv }}
           PYTEST_ADDOPTS: -vv --cov storage_service --cov-config=.coveragerc --cov-report xml:coverage.xml
         run: |
           tox
       - name: "Upload coverage report"
-        if: matrix.coverage && github.repository == 'artefactual/archivematica-storage-service'
+        if: github.repository == 'artefactual/archivematica-storage-service'
         uses: "codecov/codecov-action@v3"
         with:
-          files: ./coverage.xml
-          fail_ci_if_error: true
+          files: "./coverage.xml"
+          fail_ci_if_error: false
           verbose: true
-          name: ${{ matrix.name }}
-          flags: ${{ matrix.name }}
   integration:
-    name: "Integration"
-    runs-on: "ubuntu-22.04"
+    name: "Integration ${{ matrix.ubuntu-version}} with ${{ matrix.python-version }}"
+    runs-on: "ubuntu-20.04"
+    strategy:
+      fail-fast: false
+      matrix:
+        ubuntu-version: ["18.04", "20.04", "22.04"]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
     steps:
       - name: "Check out repository"
         uses: "actions/checkout@v3"
+      - name: "Set up Python ${{ matrix.python-version }}"
+        uses: "actions/setup-python@v4"
+        with:
+          python-version: "${{ matrix.python-version }}"
+          cache: "pip"
+      - name: "Compile Python requirements"
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade pip-tools
+          rm requirements/*.txt
+          make -C requirements pip-compile
       - name: "Run tests"
         run: |
           ./run.sh
         shell: "bash"
         working-directory: "integration"
         env:
+          UBUNTU_VERSION: ${{ matrix.ubuntu-version }}
+          PYTHON_VERSION: ${{ matrix.python-version}}
           COMPOSE_DOCKER_CLI_BUILD: 1
           DOCKER_BUILDKIT: 1
           PYTEST_ADDOPTS: -vv
