@@ -175,7 +175,7 @@ class DSpace(models.Model):
         mets_path.unlink()
         return kwargs
 
-    def _archive(self, src, dst):
+    def _archive(self, src: pathlib.Path, dst: pathlib.Path):
         """
         Combine a number of files into one archive file.
 
@@ -198,10 +198,9 @@ class DSpace(models.Model):
 
         return dst
 
-    def _archive_zip(self, src, dst):
+    def _archive_zip(self, src: pathlib.Path, dst: pathlib.Path):
         """Return the command that creates the ZIP archive file."""
-        if not dst.endswith(".zip"):
-            dst += ".zip"
+        dst = dst.with_suffix(".zip")
 
         return (
             dst,
@@ -213,15 +212,14 @@ class DSpace(models.Model):
                 "-y",  # Assume Yes on all queries
                 "-mtc=on",  # Keep timestamps (create, mod, access)
                 "-mmt=on",  # Multithreaded
-                dst,  # Destination
-                src,  # Source
+                str(dst),  # Destination
+                str(src),  # Source
             ],
         )
 
-    def _archive_7z(self, src, dst):
+    def _archive_7z(self, src: pathlib.Path, dst: pathlib.Path):
         """Return the command that creates the 7z archive file."""
-        if not dst.endswith(".7z"):
-            dst += ".7z"
+        dst = dst.with_suffix(".7z")
 
         return (
             dst,
@@ -236,8 +234,8 @@ class DSpace(models.Model):
                 "-mtm=on",
                 "-mta=on",  # Keep timestamps (create, mod, access)
                 "-mmt=on",  # Multithreaded
-                dst,  # Destination
-                src,  # Source
+                str(dst),  # Destination
+                str(src),  # Source
             ],
         )
 
@@ -284,11 +282,11 @@ class DSpace(models.Model):
 
         # Does this have to be the same compression as before?
         # Compress objects
-        objects_zip = self._archive(objects_dir, os.path.join(output_dir, "objects"))
+        objects_zip = self._archive(objects_dir, output_dir / "objects")
         shutil.rmtree(objects_dir)
 
         # Compress everything else
-        metadata_zip = self._archive(metadata_dir, os.path.join(output_dir, "metadata"))
+        metadata_zip = self._archive(metadata_dir, output_dir / "metadata")
         shutil.rmtree(metadata_dir)
 
         # os.remove(input_path)
