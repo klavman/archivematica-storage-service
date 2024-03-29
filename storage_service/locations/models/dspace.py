@@ -249,14 +249,15 @@ class DSpace(models.Model):
         :return: List of packages to be stored
         """
         # TODO Should output dir be a temp dir?
-        output_dir = os.path.dirname(input_path) + "/"
-        dirname = os.path.splitext(os.path.basename(input_path))[0]
+        input_path = pathlib.Path(input_path)
+        output_dir = input_path.parent
+        dirname = input_path.stem
         command = [
             "unar",
             "-force-overwrite",
             "-output-directory",
-            output_dir,
-            input_path,
+            str(output_dir),
+            str(input_path),
         ]
         try:
             subprocess.check_call(command)
@@ -268,16 +269,18 @@ class DSpace(models.Model):
             raise
 
         # Move objects into their own directory
-        objects_dir = os.path.join(output_dir, "objects")
-        metadata_dir = os.path.join(output_dir, dirname)
-        os.mkdir(objects_dir)
-        for item in os.listdir(os.path.join(metadata_dir, "data", "objects")):
-            if item in ("metadata", "submissionDocumentation"):
+        objects_dir = output_dir / "objects"
+        metadata_dir = output_dir / dirname
+        objects_dir.mkdir()
+        objects_path = metadata_dir / "data" / "objects"
+
+        for item_path in objects_path.iterdir():
+            if item_path.name in ("metadata", "submissionDocumentation"):
                 continue
 
-            src = os.path.join(metadata_dir, "data", "objects", item)
-            dst = os.path.join(objects_dir, item)
-            os.rename(src, dst)
+            src = item_path
+            dst = objects_dir / item_path.name
+            src.rename(dst)
 
         # Does this have to be the same compression as before?
         # Compress objects
