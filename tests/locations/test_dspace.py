@@ -86,9 +86,9 @@ class TestDSpace(TempDirMixin, TestCase):
         split_paths = self.dspace_object._split_package(path)
         # Verify
         assert len(split_paths) == 2
-        assert str(self.tmpdir / "objects.zip") in split_paths
+        assert self.tmpdir / "objects.zip" in split_paths
         assert (self.tmpdir / "objects.zip").is_file()
-        assert str(self.tmpdir / "metadata.zip") in split_paths
+        assert self.tmpdir / "metadata.zip" in split_paths
         assert (self.tmpdir / "metadata.zip").is_file()
 
     def test_split_package_7z(self):
@@ -102,9 +102,9 @@ class TestDSpace(TempDirMixin, TestCase):
         split_paths = self.dspace_object._split_package(path)
         # Verify
         assert len(split_paths) == 2
-        assert str(self.tmpdir / "objects.7z") in split_paths
+        assert self.tmpdir / "objects.7z" in split_paths
         assert (self.tmpdir / "objects.7z").is_file()
-        assert str(self.tmpdir / "metadata.7z") in split_paths
+        assert self.tmpdir / "metadata.7z" in split_paths
         assert (self.tmpdir / "metadata.7z").is_file()
 
     @mock.patch(
