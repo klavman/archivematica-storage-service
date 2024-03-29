@@ -237,7 +237,7 @@ class DSpace(models.Model):
             ],
         )
 
-    def _split_package(self, input_path):
+    def _split_package(self, input_path: pathlib.Path):
         """
         Splits the input package into objects and metadata & logs.
 
@@ -245,7 +245,6 @@ class DSpace(models.Model):
         :return: List of packages to be stored
         """
         # TODO Should output dir be a temp dir?
-        input_path = pathlib.Path(input_path)
         output_dir = input_path.parent
         dirname = input_path.stem
         command = [
@@ -301,7 +300,7 @@ class DSpace(models.Model):
         if package is None:
             LOGGER.warning("DSpace requires package param")
             return
-        
+
         source_path = pathlib.Path(source_path)
 
         # This only handles compressed AIPs
