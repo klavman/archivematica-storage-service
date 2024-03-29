@@ -7,6 +7,7 @@ IRI.
 import logging
 import mimetypes
 import os
+import pathlib
 import re
 import shutil
 import subprocess
@@ -114,19 +115,19 @@ class DSpace(models.Model):
 
         # Extract METS file
         # TODO Should output dir be a temp dir?
-        output_dir = os.path.dirname(input_path) + "/"
-        dirname = os.path.splitext(os.path.basename(input_path))[0]
-        relative_mets_path = os.path.join(
-            dirname, "data", "METS." + str(aip_uuid) + ".xml"
-        )
-        mets_path = os.path.join(output_dir, relative_mets_path)
+        input_path = pathlib.Path(input_path)
+        output_dir = input_path.parent
+        dirname = input_path.stem
+        relative_mets_path = pathlib.Path(f"{dirname}/data/METS.{aip_uuid}.xml")
+        mets_path = output_dir / relative_mets_path
+
         command = [
             "unar",
             "-force-overwrite",
             "-o",
-            output_dir,
-            input_path,
-            relative_mets_path,
+            str(output_dir),
+            str(input_path),
+            str(relative_mets_path),
         ]
         try:
             subprocess.check_call(command)
@@ -171,7 +172,7 @@ class DSpace(models.Model):
                 ),
             }
             LOGGER.debug("Dublin Core metadata for DSpace: %s", kwargs)
-        os.remove(mets_path)
+        mets_path.unlink()
         return kwargs
 
     def _archive(self, src, dst):
