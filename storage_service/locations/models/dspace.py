@@ -5,8 +5,6 @@ Space path can be left empty, and the Location path should be the collection's
 IRI.
 """
 import logging
-import mimetypes
-import os
 import pathlib
 import re
 import shutil
@@ -303,9 +301,11 @@ class DSpace(models.Model):
         if package is None:
             LOGGER.warning("DSpace requires package param")
             return
+        
+        source_path = pathlib.Path(source_path)
 
         # This only handles compressed AIPs
-        if not os.path.isfile(source_path):
+        if not source_path.is_file():
             raise NotImplementedError(
                 _("Storing in DSpace does not support uncompressed AIPs")
             )
@@ -333,7 +333,7 @@ class DSpace(models.Model):
         for upload_path in upload_paths:
             LOGGER.info("Add file %s to %s", upload_path, entry_receipt.edit_media)
             # Add file to DSpace item
-            with open(upload_path, "rb") as f:
+            with upload_path.open("rb") as f:
                 content = f.read()  # sword2 iterates over this twice
 
             # Note: This has problems because httplib2 tries all requests using basic auth without any auth and retries after getting a 401. This breaks with files over 2097152 bytes.
@@ -349,11 +349,11 @@ class DSpace(models.Model):
             # This replicates the sword2 behaviour but using requests for the basic auth
             LOGGER.debug("Using requests")
             headers = {
-                "Content-Type": str(mimetypes.guess_type(upload_path)),
+                "Content-Type": utils.get_mimetype(upload_path),
                 # 'Content-MD5': str(md5sum),
-                "Content-Length": str(os.path.getsize(upload_path)),
+                "Content-Length": str(upload_path.stat().st_size),
                 "Content-Disposition": "attachment; filename=%s"
-                % urllib.parse.quote(os.path.basename(upload_path)),
+                % urllib.parse.quote(upload_path.name),
             }
             requests.post(
                 entry_receipt.edit_media,
