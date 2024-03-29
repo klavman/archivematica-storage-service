@@ -1,4 +1,3 @@
-import os
 import pathlib
 import shutil
 import uuid
@@ -60,9 +59,7 @@ class TestDSpace(TempDirMixin, TestCase):
 
     def test_get_metadata(self):
         """It should fetch DC metadata from AIP."""
-        shutil.copy(
-            os.path.join(FIXTURES_DIR, "small_compressed_bag.zip"), str(self.tmpdir)
-        )
+        shutil.copy(FIXTURES_DIR / "small_compressed_bag.zip", self.tmpdir)
         ret = self.dspace_object._get_metadata(
             str(self.tmpdir / "small_compressed_bag.zip"),
             uuid.UUID("1056123d-8a16-49c2-ac51-8e5fa367d8b5"),
@@ -78,10 +75,8 @@ class TestDSpace(TempDirMixin, TestCase):
     def test_split_package_zip(self):
         """It should split a package into objects and metadata using ZIP."""
         # Setup
-        shutil.copy(
-            os.path.join(FIXTURES_DIR, "small_compressed_bag.zip"), str(self.tmpdir)
-        )
-        path = str(self.tmpdir / "small_compressed_bag.zip")
+        shutil.copy(FIXTURES_DIR / "small_compressed_bag.zip", self.tmpdir)
+        path = self.tmpdir / "small_compressed_bag.zip"
         # Test
         split_paths = self.dspace_object._split_package(path)
         # Verify
@@ -93,10 +88,8 @@ class TestDSpace(TempDirMixin, TestCase):
 
     def test_split_package_7z(self):
         """It should split a package into objects and metadata using 7Z."""
-        shutil.copy(
-            os.path.join(FIXTURES_DIR, "small_compressed_bag.zip"), str(self.tmpdir)
-        )
-        path = str(self.tmpdir / "small_compressed_bag.zip")
+        shutil.copy(FIXTURES_DIR / "small_compressed_bag.zip", self.tmpdir)
+        path = self.tmpdir / "small_compressed_bag.zip"
         self.dspace_object.archive_format = self.dspace_object.ARCHIVE_FORMAT_7Z
         # Test
         split_paths = self.dspace_object._split_package(path)
@@ -162,9 +155,7 @@ class TestDSpace(TempDirMixin, TestCase):
         package = models.Package.objects.get(
             uuid="1056123d-8a16-49c2-ac51-8e5fa367d8b5"
         )
-        shutil.copy(
-            os.path.join(FIXTURES_DIR, "small_compressed_bag.zip"), str(self.tmpdir)
-        )
+        shutil.copy(FIXTURES_DIR / "small_compressed_bag.zip", self.tmpdir)
         path = str(self.tmpdir / "small_compressed_bag.zip")
 
         # Upload
